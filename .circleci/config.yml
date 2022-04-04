@@ -11,7 +11,7 @@ jobs:
             command: |
               aws cloudformation deploy \
                 --template-file template.yml \
-                --stack-name AMR
+                --stack-name AMRe
 # Sequential workflow
 workflows:
   # Name the workflow
