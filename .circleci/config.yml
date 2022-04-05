@@ -1,25 +1,47 @@
 version: 2.1
 # Use a package of configuration called an orb.C
 jobs:
-  create_infrastructure: 
-      docker:
-        - image: python:3.7-alpine3.11
-      steps:
-        - checkout
-        - add_ssh_keys:
+  #create_infrastructure: 
+     # docker:
+    #    - image: python:3.7-alpine3.11
+   #   steps:
+     #   - checkout
+     #   - add_ssh_keys:
             # You can get this ID in the section where you registered the SSH Key
-            fingerprints: ["24:b8:47:4d:fa:7e:45:b6:49:bd:27:53:29:27:ee:a7"] 
-        - run:
-            name: Install Ansible
-            command: |
-                 apk add --update ansible
+        #    fingerprints: ["24:b8:47:4d:fa:7e:45:b6:49:bd:27:53:29:27:ee:a7"] 
+    #    - run:
+     #       name: Install Ansible
+     #       command: |
+      #           apk add --update ansible
 
               
-        - run:
-            name: Run Playbook and Configure server
-            command: |
-                ansible-playbook -i inventory.txt main-remote.yml
-
+   #     - run:
+   #         name: Run Playbook and Configure server
+    #        command: |
+        #        ansible-playbook -i inventory.txt main-remote.yml
+##################### #Smoke Testing ##############################################
+# Exercise: Smoke Testing
+  smoke_test:
+    docker:
+      - image: alpine:latest
+    steps:
+      - checkout
+      - add_ssh_keys:
+            # You can get this ID in the section where you registered the SSH Key
+            fingerprints: ["24:b8:47:4d:fa:7e:45:b6:49:bd:27:53:29:27:ee:a7"] 
+      - run: apk add --update curl
+      - run:
+          name: smoke test
+          command: |
+            URL="https://blog.udacity.com/"
+            # Test if website exists
+            if curl -s --head ${URL} 
+            then
+              return 0
+            else
+              return 1
+            fi
+################################################################################
 
           # Your command
 # Sequential workflow
@@ -27,5 +49,6 @@ workflows:
   # Name the workflow
   myWorkflow:
     jobs:
-      - create_infrastructure
+    #  - create_infrastructure
+      - smoke_test
  
