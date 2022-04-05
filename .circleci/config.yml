@@ -1,46 +1,50 @@
 version: 2.1
 # Use a package of configuration called an orb.C
-jobs:
-  #create_infrastructure: 
-     # docker:
-    #    - image: python:3.7-alpine3.11
-   #   steps:
-     #   - checkout
-     #   - add_ssh_keys:
-            # You can get this ID in the section where you registered the SSH Key
-        #    fingerprints: ["24:b8:47:4d:fa:7e:45:b6:49:bd:27:53:29:27:ee:a7"] 
-    #    - run:
-     #       name: Install Ansible
-     #       command: |
-      #           apk add --update ansible
 
+commands:
+   # Exercise - Rollback
+   destroy_environment:
+     steps:
+       - run:
+           name: Destroy environment
+           # ${CIRCLE_WORKFLOW_ID} is a Built-in environment variable 
+           # ${CIRCLE_WORKFLOW_ID:0:5} takes the first 5 chars of the variable CIRCLE_CI_WORKFLOW_ID 
+           when: on_fail
+           command: |
+             aws cloudformation delete-stack --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:7}
+
+jobs:
+  create_infrastructure: 
+      docker:
+        - image: python:3.7-alpine3.11
+      steps:
+        - checkout
+        - add_ssh_keys:
+            # You can get this ID in the section where you registered the SSH Key
+            fingerprints: ["24:b8:47:4d:fa:7e:45:b6:49:bd:27:53:29:27:ee:a7"] 
+        - run:
+            name: Create Cloudformation Stack
+            command: |
+              aws cloudformation deploy \
+              --template-file template.yml \
+              --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:7} \
+              --region us-east-1
               
    #     - run:
    #         name: Run Playbook and Configure server
     #        command: |
         #        ansible-playbook -i inventory.txt main-remote.yml
 ##################### #Smoke Testing ##############################################
-# Exercise: Smoke Testing
   smoke_test:
-    docker:
-      - image: alpine:latest
-    steps:
-      - checkout
-      - add_ssh_keys:
-            # You can get this ID in the section where you registered the SSH Key
-            fingerprints: ["24:b8:47:4d:fa:7e:45:b6:49:bd:27:53:29:27:ee:a7"] 
-      - run: apk add --update curl
-      - run:
-          name: smoke test
-          command: |
-            URL="https://blog.udawwcity.cwom/"
-            # Test if website exists
-            if curl -s --head ${URL} 
-            then
-              return 0
-            else
-              return 1
-            fi
+ # Exercise: Smoke Testing
+      docker:
+         - image: alpine:latest
+      steps:
+        - run:
+            name: Test job
+            # Fail the job intentionally to simulate an error.
+            command:  return 1
+        - destroy_environment 
 ################################################################################
 
           # Your command
@@ -49,6 +53,6 @@ workflows:
   # Name the workflow
   myWorkflow:
     jobs:
-    #  - create_infrastructure
+      - create_infrastructure
       - smoke_test
  
